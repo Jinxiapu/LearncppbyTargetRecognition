@@ -2,7 +2,10 @@
 #include "connect.h"
 #include "objectrecognize.h"
 #include "bmp.h"
+#include "morphology.h"
 #include <string.h>
+
+#define SQSIZE 9
 
 using namespace std;
 
@@ -24,6 +27,14 @@ int im::im(BYTE * buff, LONG Width, LONG Height)
 	MonochromeBmpHandler imghandle = MonochromeBmpHandler();
 	imghandle.write(buff, "./test/OTSUThresholdSegmentation.bmp", Width, Height);
 
+	bool kernel[SQSIZE*SQSIZE];
+	for (size_t i = 0; i < SQSIZE * SQSIZE; i++)
+		kernel[i] = true;
+	im::cKernel testk = cKernel(SQSIZE, (bool *)kernel);
+	im::Dilation d = im::Dilation((bool *)buff, Width, Height, testk);
+	im::Erosion e = im::Erosion((bool *)buff, Width, Height, testk);
+	e.run();
+	d.run();
 	/* find the connected components. */
 	int * lable_buff = new int[N];
 	ConnectedComponents cc(20);
@@ -106,7 +117,7 @@ BYTE im::OTSUThresholdSegmentation(BYTE * buff, LONG N)
 	}
 
 	for (LONG i = 0; i < N; i++)
-		buff[i] = (buff[i] > best_t) ? 255 : 0;
+		buff[i] = (buff[i] > best_t) ? 0 : 255;
 
 	return best_t;
 }

@@ -4,7 +4,7 @@
 
 int main()
 {
-	std::string bmpfile = "./test.bmp";
+	std::string bmpfile = "./test/origin.bmp";
 	
 	LONG width = 0, height = 0;
 	MonochromeBmpHandler imghandle = MonochromeBmpHandler();
@@ -12,5 +12,5 @@ int main()
 
 	im::im(buff, width, height);
 	
-	return !imghandle.write(buff, "./ConnectedComponents.bmp", width, height);
+	return !imghandle.write(buff, "./test/ConnectedComponents.bmp", width, height);
 }

@@ -22,7 +22,7 @@ int im::im(BYTE * buff, LONG Width, LONG Height)
 	/* threshold segmentation with otsu algorithm. */
 	OTSUThresholdSegmentation(buff, N);
 	MonochromeBmpHandler imghandle = MonochromeBmpHandler();
-	imghandle.write(buff, "./OTSUThresholdSegmentation.bmp", Width, Height);
+	imghandle.write(buff, "./test/OTSUThresholdSegmentation.bmp", Width, Height);
 
 	/* find the connected components. */
 	int * lable_buff = new int[N];
@@ -141,7 +141,7 @@ int im::GenCC(int * lable_buff, LONG Width, LONG Height, int max_lable, vector<O
 	for (int i = 0; i < max_lable; i++)
 	{
 		SingleCCRectangle(lable_buff, Width, Height, i, rec);
-		if (rec.is_valid()) {
+		if (rec.is_valid(Width, Height)) {
 			Object o = Object(lable_buff, rec, i, Width, Height);
 			v.push_back(o);
 		}

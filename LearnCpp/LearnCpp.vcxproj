@@ -126,12 +126,6 @@
     <ClInclude Include="imageprocess.h" />
     <ClInclude Include="objectrecognize.h" />
   </ItemGroup>
-  <ItemGroup>
-    <Image Include="扳手.bmp" />
-    <Image Include="未知.bmp" />
-    <Image Include="硬币.bmp" />
-    <Image Include="螺丝.bmp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

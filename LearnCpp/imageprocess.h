@@ -21,15 +21,15 @@ namespace im {
 	public:
 		Rectangle() : max_x(0), max_y(0), min_y(0), min_x(0) {}
 
-		bool is_valid()
+		bool is_valid(LONG w, LONG h)
 		{
 			LONG x = max_x - min_x;
 			LONG y = max_y - min_y;
-			if (x*y < 10)
+			if (x > w*0.9 || y > h * 0.9)
 				return false;
-			if (x*y > 200000)
+			if (x < w / 50 || y < w / 50)
 				return false;
-			if (x < 4 || y < 4)
+			if (x*y > w*h/2)
 				return false;
 			return true;
 		}

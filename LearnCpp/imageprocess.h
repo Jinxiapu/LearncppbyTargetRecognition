@@ -58,6 +58,15 @@ namespace im {
 		ObjectBuff(const ObjectBuff &ob) : Width(ob.Width), Height(ob.Height) {
 			this->buff = new BYTE[(ob.Width+1)*(ob.Height+1)];
 		}
+
+		ObjectBuff& operator=(const ObjectBuff &ob)
+		{
+			this->Width = ob.Width;
+			this->Height = ob.Height;
+			this->buff = new BYTE[(ob.Width+1)*(ob.Height+1)];
+			return *this;
+		}
+
 		~ObjectBuff() {
 			if (buff)
 				delete[] buff;
@@ -68,9 +77,9 @@ namespace im {
 		*/
 		BYTE *pixel(LONG x, LONG y) {
 			if (x < 0 || y < 0)
-				return nullptr;
+				return NULL;
 			if (x > Width || y > Height)
-				return nullptr;
+				return NULL;
 			BYTE *row = &buff[y*Width];
 			return &row[x];
 		}
@@ -82,10 +91,10 @@ namespace im {
 			if (n >= 0 && n <= (Width + 1)*(Height + 1) - 1)
 				return buff + n;
 			else
-				return nullptr;
+				return NULL;
 		}
-		const LONG Width; // the Width of the Object image. one row have Width+1 pixels.
-		const LONG Height; // the Height of the Object image. one colum have Height+1 pixels.
+		LONG Width; // the Width of the Object image. one row have Width+1 pixels.
+		LONG Height; // the Height of the Object image. one colum have Height+1 pixels.
 	private:
 		BYTE * buff;
 	};
@@ -97,10 +106,23 @@ namespace im {
 			kind(UnknownKind), lbuff(lbuff),  rec(r), lable(lable), w(w), h(h),
 			obuff(r.max_x - r.min_x, r.max_y - r.min_y) {};
 		
+		Object& operator= (const Object &o)
+		{
+			this->kind = o.kind;
+			this->obuff = o.obuff;
+			this->h = o.h;
+			this->lable = o.lable;
+			this->lbuff = o.lbuff;
+			this->rec = o.rec;
+			this->w = o.w;
+			this->obuff = o.obuff;
+
+			return *this;
+		}
 		ObjectKind kind; // the kind of the Object. value can only from enum ObjectKind.
 		ObjectBuff obuff; // store Object data.
-		const Rectangle rec; 
-		const int lable; // lable value in lable_image.
+		Rectangle rec; 
+		int lable; // lable value in lable_image.
 
 		/* generate Bit image from lable_image. 
 		 Only the pixel whose value is the same with lable will be set 255 
@@ -115,8 +137,8 @@ namespace im {
 		}
 
 	private:
-		int * const lbuff; // lable_image buff.
-		const LONG w; // Width of the lable_image.
-		const LONG h; // Height of the lable_image.
+		int *  lbuff; // lable_image buff.
+		LONG w; // Width of the lable_image.
+		LONG h; // Height of the lable_image.
 	};
 }

@@ -2,10 +2,8 @@
 #include "connect.h"
 #include "objectrecognize.h"
 #include "bmp.h"
-#include "morphology.h"
 #include <string.h>
 
-#define SQSIZE 9
 
 using namespace std;
 
@@ -27,18 +25,10 @@ int im::im(BYTE * buff, LONG Width, LONG Height)
 	MonochromeBmpHandler imghandle = MonochromeBmpHandler();
 	imghandle.write(buff, "./test/OTSUThresholdSegmentation.bmp", Width, Height);
 
-	bool kernel[SQSIZE*SQSIZE];
-	for (size_t i = 0; i < SQSIZE * SQSIZE; i++)
-		kernel[i] = true;
-	im::cKernel testk = cKernel(SQSIZE, (bool *)kernel);
-	im::Dilation d = im::Dilation((bool *)buff, Width, Height, testk);
-	im::Erosion e = im::Erosion((bool *)buff, Width, Height, testk);
-	e.run();
-	d.run();
 	/* find the connected components. */
 	int * lable_buff = new int[N];
 	ConnectedComponents cc(20);
-	int max_lable = cc.connected(buff, lable_buff, Width, Height, std::equal_to<BYTE>(), constant<bool, true>());
+	int max_lable = cc.connected(buff, lable_buff, Width, Height, true);
 	std::cout << "totaly have " << max_lable << " lables." << std::endl;
 
 	vector<Object> v;
@@ -74,8 +64,8 @@ int im::im(BYTE * buff, LONG Width, LONG Height)
 		std::cout << std::endl;
 	}
 
-	for (LONG i = 0; i < N; i++)
-		buff[i] = lable_buff[i] * (255 / max_lable);
+	for (LONG t = 0; t < N; t++)
+		buff[t] = lable_buff[t] * (255 / max_lable);
 	delete[] lable_buff;
 
 
@@ -89,13 +79,13 @@ BYTE im::OTSUThresholdSegmentation(BYTE * buff, LONG N)
 		return 0;
 
 	double Histogram[256] = { 0 };
-	for (size_t i = 0; i < N; i++)
+	for (size_t n = 0; n < N; n++)
 		// compute the image histogram
-		Histogram[buff[i]]++;
+		Histogram[buff[n]]++;
 
 	double sum = 0;
-	for (size_t i = 0; i < 256; i++)
-		sum += i * Histogram[i];
+	for (size_t m = 0; m < 256; m++)
+		sum += m * Histogram[m];
 	double q1 = 0, q2 = 0, sumB = 0, u1 = 0, u2 = 0;
 	double var = 0, var_max = 0;
 	BYTE best_t = 0;
@@ -157,7 +147,8 @@ int im::GenCC(int * lable_buff, LONG Width, LONG Height, int max_lable, vector<O
 			v.push_back(o);
 		}
 	}
-	for (Object &o : v)
-		o.make_bit_image();
+	
+	for (i = 0; i < v.size(); i++)
+		v[i].make_bit_image();
 	return 0;
 }

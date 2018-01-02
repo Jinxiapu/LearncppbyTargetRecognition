@@ -7,15 +7,15 @@
 class MonochromeBmpHandler
 {
 public:
-	MonochromeBmpHandler() : bmfh({ 0 }), bmih({ 0 }) {};
+	MonochromeBmpHandler() {};
 
-	BYTE* read(std::string filename, LONG & width, LONG & height) {
-		if (filename.empty())
-			return nullptr;
+	BYTE* read(const char* filename, LONG & width, LONG & height) {
+		if (!filename)
+			return NULL;
 		
 		std::ifstream fin(filename, std::ios::binary);
 		if (!fin)
-			return nullptr;
+			return NULL;
 
 		fin.seekg(0, std::ios::beg);
 		fin.read((char*)&bmfh, sizeof(bmfh));
@@ -36,8 +36,8 @@ public:
 		return buff;
 	}
 
-	bool write(const BYTE * buff, std::string filename, LONG width, LONG height) {
-		if (filename.empty() || !buff)
+	bool write(const BYTE * buff, const char* filename, LONG width, LONG height) {
+		if (!filename || !buff)
 			return false;
 
 		std::ofstream fout(filename, std::ios::binary | std::ios::trunc);
@@ -47,7 +47,10 @@ public:
 		RGBQUAD palette[256];
 		for (int i = 0; i < 256; i++) {
 			BYTE bytei = (BYTE)i;
-			palette[i] = { bytei,bytei,bytei,0 };
+			palette[i].rgbBlue = bytei;
+			palette[i].rgbGreen = bytei;
+			palette[i].rgbRed = bytei;
+			palette[i].rgbReserved = 0;
 		}
 
 		bmfh.bfType = 0x4d42;

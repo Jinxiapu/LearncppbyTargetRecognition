@@ -13,8 +13,11 @@ typedef enum ObjectKind
 	Coin //Ó²±Ò
 } ObjectKind;
 
+
+
 namespace im {
-	int im(BYTE *buff, LONG Width, LONG Height);
+	using namespace std;
+	
 
 	class Rectangle
 	{
@@ -29,7 +32,7 @@ namespace im {
 				return false;
 			if (x < w / 50 || y < w / 50)
 				return false;
-			if (x*y > w*h/2)
+			if (x*y > w*h / 2)
 				return false;
 			return true;
 		}
@@ -53,17 +56,17 @@ namespace im {
 	{
 	public:
 		ObjectBuff(const LONG w, const LONG h) : Width(w), Height(h) {
-			buff = new BYTE[(w+1)*(h+1)];
+			buff = new BYTE[(w + 1)*(h + 1)];
 		};
 		ObjectBuff(const ObjectBuff &ob) : Width(ob.Width), Height(ob.Height) {
-			this->buff = new BYTE[(ob.Width+1)*(ob.Height+1)];
+			this->buff = new BYTE[(ob.Width + 1)*(ob.Height + 1)];
 		}
 
 		ObjectBuff& operator=(const ObjectBuff &ob)
 		{
 			this->Width = ob.Width;
 			this->Height = ob.Height;
-			this->buff = new BYTE[(ob.Width+1)*(ob.Height+1)];
+			this->buff = new BYTE[(ob.Width + 1)*(ob.Height + 1)];
 			return *this;
 		}
 
@@ -71,30 +74,30 @@ namespace im {
 			if (buff)
 				delete[] buff;
 		}
-		/* return pixel point of buff[y][x]. 
+		/* return pixel point of buff[y][x].
 		meanless x, y will return nullptr.
-		0 <= x, y <= Width, Height.
+		0 < x, y < Width, Height.
 		*/
 		BYTE *pixel(LONG x, LONG y) {
 			if (x < 0 || y < 0)
 				return NULL;
-			if (x > Width || y > Height)
+			if (x >= Width || y >= Height)
 				return NULL;
 			BYTE *row = &buff[y*Width];
 			return &row[x];
 		}
 		/* return pixel point of buff[n].
 		meanless x, y will return nullptr.
-		0 <= n <= N (Width + 1)*(Height + 1) - 1).
+		0 <= n <= N (Width*Height - 1).
 		*/
 		BYTE *pixel(LONG n) {
-			if (n >= 0 && n <= (Width + 1)*(Height + 1) - 1)
+			if (n >= 0 && n <= (Width*Height - 1))
 				return buff + n;
 			else
 				return NULL;
 		}
-		LONG Width; // the Width of the Object image. one row have Width+1 pixels.
-		LONG Height; // the Height of the Object image. one colum have Height+1 pixels.
+		LONG Width; // the Width of the Object image. one row have Width pixels.
+		LONG Height; // the Height of the Object image. one colum have Height pixels.
 	private:
 		BYTE * buff;
 	};
@@ -103,9 +106,9 @@ namespace im {
 	{
 	public:
 		Object(int * const lbuff, const Rectangle r, const int lable, const LONG w, const LONG h) :
-			kind(UnknownKind), lbuff(lbuff),  rec(r), lable(lable), w(w), h(h),
+			kind(UnknownKind), lbuff(lbuff), rec(r), lable(lable), w(w), h(h),
 			obuff(r.max_x - r.min_x, r.max_y - r.min_y) {};
-		
+
 		Object& operator= (const Object &o)
 		{
 			this->kind = o.kind;
@@ -121,17 +124,18 @@ namespace im {
 		}
 		ObjectKind kind; // the kind of the Object. value can only from enum ObjectKind.
 		ObjectBuff obuff; // store Object data.
-		Rectangle rec; 
+		Rectangle rec;
 		int lable; // lable value in lable_image.
+		bool is_valid;
 
-		/* generate Bit image from lable_image. 
-		 Only the pixel whose value is the same with lable will be set 255 
-		 and others will be 0.*/
+		/* generate Bit image from lable_image.
+		Only the pixel whose value is the same with lable will be set 255
+		and others will be 0.*/
 		void make_bit_image() {
 			for (LONG r = rec.min_y; r < rec.max_y; r++) {
 				int * row = &lbuff[r*w];
 				for (LONG c = rec.min_x; c < rec.max_x; c++) {
-					*obuff.pixel(c - rec.min_x, r - rec.min_y) = (row[c] == lable) ? 255: 0;
+					*obuff.pixel(c - rec.min_x, r - rec.min_y) = (row[c] == lable) ? 255 : 0;
 				}
 			}
 		}
@@ -141,4 +145,6 @@ namespace im {
 		LONG w; // Width of the lable_image.
 		LONG h; // Height of the lable_image.
 	};
+
+	int im(BYTE *buff, LONG Width, LONG Height, vector<Object> &v);
 }

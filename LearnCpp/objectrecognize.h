@@ -7,5 +7,5 @@
 
 namespace objr {
 	using namespace std;
-	int objr(vector<im::Object> &v);
+	int objr(vector<im::Object> &v, const BYTE *, const LONG Width, const LONG Height);
 }

@@ -1,13 +1,23 @@
 #include "imageprocess.h"
 #include "bmp.h"
+#include <vector>
+using namespace std;
 
 int main()
 {	
 	LONG width = 0, height = 0;
-	MonochromeBmpHandler imghandle = MonochromeBmpHandler();
-	BYTE *buff = imghandle.read("./test/origin.bmp", width, height);
+	BmpHandler imghandle = BmpHandler();
+	bool SingleOrBGR;
+	BYTE *buff = imghandle.read("./test/origin.bmp", width, height, SingleOrBGR);
 
-	im::im(buff, width, height);
-	return !imghandle.write(buff, "./test/ConnectedComponents.bmp", width, height);
+	if (!buff) {
+		std::cout << "error" << std::endl;
+		getchar();
+	}
+	vector<im::Object> v;
+	 im::im(buff, width, height, v);
+	imghandle.write(buff, "./test/after.bmp", width, height, SingleOrBGR);
+	getchar();
+	return 0;
 }
 

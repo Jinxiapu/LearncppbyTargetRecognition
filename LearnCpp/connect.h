@@ -68,7 +68,7 @@ namespace im {
 		int relabel_image(Tlabel *out, int width, int height);
 
 		std::vector<Similarity> labels;
-		int highest_label;
+		unsigned int highest_label;
 	};
 
 	int ConnectedComponents::connected(const Tin *img, Tlabel *labelimg, int width, int height, bool K8_connectivity)
@@ -144,7 +144,7 @@ namespace im {
 	int ConnectedComponents::relabel_image(Tlabel *labelimg, int width, int height)
 	{
 		int newtag = 0;
-		for (int id = 0; id < labels.size(); ++id)
+		for (size_t id = 0; id < labels.size(); ++id)
 			if (is_root_label(id))
 				labels[id].tag = newtag++;
 

@@ -2,74 +2,66 @@
 #include "connect.h"
 #include "objectrecognize.h"
 #include "bmp.h"
-#include <string.h>
 
 
 using namespace std;
 
 namespace im {
 	BYTE OTSUThresholdSegmentation(BYTE *buff, LONG N);
-	int SingleCCRectangle(int * lable_buff, LONG Width, LONG Height, int lable, Rectangle & rec);
-	int GenCC(int * lable_buff, LONG Width, LONG Height, int max_lable, vector<Object> &);
-}
+	int SingleCCRectangle(const BYTE *buff,int * lable_buff, LONG Width, LONG Height, int lable, Rectangle & rec);
+	int GenCC(const BYTE *, int *, LONG Width, LONG Height, int max_lable, vector<Object> &);
+	int im(BYTE * imgbuff, LONG Width, LONG Height, vector<Object> &v)
+	{
+		if (!imgbuff)
+			return -1;
 
-int im::im(BYTE * buff, LONG Width, LONG Height)
-{
-	if(!buff)
-		return -1;
-
-	LONG N = Width * Height;
-
-	/* threshold segmentation with otsu algorithm. */
-	OTSUThresholdSegmentation(buff, N);
-	MonochromeBmpHandler imghandle = MonochromeBmpHandler();
-	imghandle.write(buff, "./test/OTSUThresholdSegmentation.bmp", Width, Height);
-
-	/* find the connected components. */
-	int * lable_buff = new int[N];
-	ConnectedComponents cc(20);
-	int max_lable = cc.connected(buff, lable_buff, Width, Height, true);
-	std::cout << "totaly have " << max_lable << " lables." << std::endl;
-
-	vector<Object> v;
-	GenCC(lable_buff, Width, Height, max_lable, v);
-	std::cout << "totaly have " << v.size()  << " valid lables." << std::endl;
-	
-	objr::objr(v);
-	std::cout << "recognize result:" << std::endl;
-	for (int i = 0; i < v.size(); i++) {
-		std::cout << "lable: "<<v[i].lable;
-		std::cout << " | " << v[i].rec << "\t";
-		switch (v[i].kind)
-		{
-		case Useless:
-			std::cout << "Useless";
-			break;
-		case Screw:
-			std::cout << "Screw";
-			break;
-		case Nut:
-			std::cout << "Nut";
-			break;
-		case HexKey:
-			std::cout << "Hex key";
-			break;
-		case Coin:
-			std::cout << "Coin";
-			break;
-		default:
-			std::cout << "Unknown";
-			break;
+		LONG N = Width * Height;
+		BYTE * buff = new BYTE[N * 3];
+		for (LONG i = 0; i < N; i++) {
+			buff[i] = (imgbuff[3 * i] * 144 + 587 * imgbuff[3 * i + 1] + 299 * imgbuff[3 * i + 2] + 500) / 1000;
 		}
-		std::cout << std::endl;
+
+		/* threshold segmentation with otsu algorithm. */
+		OTSUThresholdSegmentation(buff, N);
+		/* find the connected components. */
+		int * lable_buff = new int[N];
+		ConnectedComponents cc(20);
+		const auto max_lable = cc.connected(buff, lable_buff, Width, Height, true);
+
+		GenCC(buff, lable_buff, Width, Height, max_lable, v);
+
+		objr::objr(v, imgbuff, Width, Height);
+		for (size_t n = 0; n < v.size(); n++) {
+			for (LONG y = v[n].rec.min_y; y < v[n].rec.max_y; y++) {
+				for (LONG x = v[n].rec.min_x; x < v[n].rec.max_x; x++) {
+					if (*v[n].obuff.pixel(x - v[n].rec.min_x, y - v[n].rec.min_y)) {
+						switch (v[n].kind)
+						{
+						case Nut:
+							imgbuff[(y*Width + x) * 3] = 255;
+							break;
+						case Screw:
+							imgbuff[(y*Width + x) * 3+1] = 255;
+							break;
+						case HexKey:
+							imgbuff[(y*Width + x) * 3+2] = 255;
+							break;
+						case Coin:
+							imgbuff[(y*Width + x) * 3 + 1] = 255;
+							imgbuff[(y*Width + x) * 3] = 255;
+							break;
+						default:
+							break;
+						}
+					}
+				}
+			}
+		}
+		delete[] lable_buff;
+		delete[] buff;
+		return 0;
 	}
-
-	for (LONG t = 0; t < N; t++)
-		buff[t] = lable_buff[t] * (255 / max_lable);
-	delete[] lable_buff;
-
-
-	return 0;
+	
 }
 
 /* Accept the grayscale images only. */
@@ -79,7 +71,7 @@ BYTE im::OTSUThresholdSegmentation(BYTE * buff, LONG N)
 		return 0;
 
 	double Histogram[256] = { 0 };
-	for (size_t n = 0; n < N; n++)
+	for (LONG n = 0; n < N; n++)
 		// compute the image histogram
 		Histogram[buff[n]]++;
 
@@ -107,19 +99,19 @@ BYTE im::OTSUThresholdSegmentation(BYTE * buff, LONG N)
 	}
 
 	for (LONG i = 0; i < N; i++)
-		buff[i] = (buff[i] > best_t) ? 0 : 255;
+		buff[i] = (buff[i] > best_t) ? 255 : 0;
 
 	return best_t;
 }
 
-int im::SingleCCRectangle(int * lable_buff, LONG Width, LONG Height, int lable, Rectangle & rec)
+int im::SingleCCRectangle(const BYTE *buff, int * lable_buff, LONG Width, LONG Height, int lable, Rectangle & rec)
 {
 	bool first_pixel=0;
 	rec = Rectangle();
 	for (LONG r = 0; r < Height; r++) {
 		int * row = &lable_buff[Width*r];
 		for (LONG c = 0; c < Width; c++) {
-			if (row[c] == lable) {
+			if (!buff[Width*r + c] && row[c] == lable) {
 				if (!first_pixel) {
 					rec.min_x = c;
 					rec.min_y = r;
@@ -135,20 +127,20 @@ int im::SingleCCRectangle(int * lable_buff, LONG Width, LONG Height, int lable, 
 	return 0;
 }
 
-int im::GenCC(int * lable_buff, LONG Width, LONG Height, int max_lable, vector<Object> &v)
+int im::GenCC(const BYTE * buff, int * lable_buff, LONG Width, LONG Height, int max_lable, vector<Object> &v)
 {
 	Rectangle rec = Rectangle();
 
 	for (int i = 0; i < max_lable; i++)
 	{
-		SingleCCRectangle(lable_buff, Width, Height, i, rec);
+		SingleCCRectangle(buff, lable_buff, Width, Height, i, rec);
 		if (rec.is_valid(Width, Height)) {
 			Object o = Object(lable_buff, rec, i, Width, Height);
 			v.push_back(o);
 		}
 	}
 	
-	for (i = 0; i < v.size(); i++)
-		v[i].make_bit_image();
+	for (size_t j = 0; j < v.size(); j++)
+		v[j].make_bit_image();
 	return 0;
 }

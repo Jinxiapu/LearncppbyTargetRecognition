@@ -3,7 +3,7 @@
 #include "objectrecognize.h"
 #include "bmp.h"
 
-
+#include <vector>
 using namespace std;
 
 namespace im {
@@ -39,16 +39,23 @@ namespace im {
 						{
 						case Nut:
 							imgbuff[(y*Width + x) * 3] = 255;
+							imgbuff[(y*Width + x) * 3+1] = 0;
+							imgbuff[(y*Width + x) * 3+2] = 0;
 							break;
 						case Screw:
 							imgbuff[(y*Width + x) * 3+1] = 255;
+							imgbuff[(y*Width + x) * 3 + 2] = 0;
+							imgbuff[(y*Width + x) * 3] = 0;
 							break;
 						case HexKey:
 							imgbuff[(y*Width + x) * 3+2] = 255;
+							imgbuff[(y*Width + x) * 3 + 1] = 0;
+							imgbuff[(y*Width + x) * 3] = 0;
 							break;
 						case Coin:
 							imgbuff[(y*Width + x) * 3 + 1] = 255;
 							imgbuff[(y*Width + x) * 3] = 255;
+							imgbuff[(y*Width + x) * 3 + 2] = 0;
 							break;
 						default:
 							break;
@@ -62,6 +69,23 @@ namespace im {
 		return 0;
 	}
 	
+	int GenCC(const BYTE * buff, int * lable_buff, LONG Width, LONG Height, int max_lable, vector<Object> &v)
+	{
+		Rectangle rec = Rectangle();
+
+	for (int i = 0; i < max_lable; i++)
+	{
+		SingleCCRectangle(buff, lable_buff, Width, Height, i, rec);
+		if (rec.is_valid(Width, Height)) {
+			Object o = Object(lable_buff, rec, i, Width, Height);
+			v.push_back(o);
+		}
+	}
+	
+	for (size_t j = 0; j < v.size(); j++)
+		v[j].make_bit_image();
+	return 0;
+	}
 }
 
 /* Accept the grayscale images only. */
@@ -127,20 +151,3 @@ int im::SingleCCRectangle(const BYTE *buff, int * lable_buff, LONG Width, LONG H
 	return 0;
 }
 
-int im::GenCC(const BYTE * buff, int * lable_buff, LONG Width, LONG Height, int max_lable, vector<Object> &v)
-{
-	Rectangle rec = Rectangle();
-
-	for (int i = 0; i < max_lable; i++)
-	{
-		SingleCCRectangle(buff, lable_buff, Width, Height, i, rec);
-		if (rec.is_valid(Width, Height)) {
-			Object o = Object(lable_buff, rec, i, Width, Height);
-			v.push_back(o);
-		}
-	}
-	
-	for (size_t j = 0; j < v.size(); j++)
-		v[j].make_bit_image();
-	return 0;
-}

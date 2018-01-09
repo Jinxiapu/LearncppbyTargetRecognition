@@ -31,25 +31,26 @@ int objr::objr(vector<im::Object>& v, const BYTE * origin, const LONG Width, con
 		}
 			
 		if (!RecOver &&  features[1] >NutArea &&
-			0.75 < features[2] && 
-			(features[0] - 1) < 0.1 && (features[0] - 1) > -0.1) {
+			0.75 < features[2] && features[2] < 0.83 &&
+			(features[0] - 1) < 0.02 && (features[0] - 1) > -0.02) {
 			v[i].kind = Coin;
 			RecOver = true;
 		}
 
+		// 识别丝杆 特征有占空比， 重心不在图像内部，长宽比与占空比存在一定线性关系
 		if (!RecOver &&  features[2] >0.24) {
 			v[i].kind = Screw;
 			RecOver = true;
 		}
-
+		// 最后识别是丝杆还是杂物
 		if(!RecOver)
 			v[i].kind = HexKey;
 
 		cout.flags(ios::left);
 		cout << v[i].lable << "\t";
-		for (size_t i = 0; i < 4; i++)
+		for (size_t j = 0; j < 4; j++)
 		{
-			cout << setw(10) << features[i] << "\t";
+			cout << setw(10) << features[j] << "\t";
 		}
 
 		cout << endl;
@@ -57,7 +58,7 @@ int objr::objr(vector<im::Object>& v, const BYTE * origin, const LONG Width, con
 		//if (v[i].is_valid) {
 		if (true){
 			char filename[50];
-			sprintf_s(filename, "./test/object_lable_%d_kind_%s.bmp", v[i].lable, ObjectKindName[v[i].kind]);
+			sprintf_s(filename, "./test/%d_%s.bmp", v[i].lable, ObjectKindName[v[i].kind]);
 			MonochromeBmpHandler imghandle = MonochromeBmpHandler();
 			imghandle.write(v[i].obuff.pixel(0), (char*)filename, v[i].obuff.Width, v[i].obuff.Height);
 		}

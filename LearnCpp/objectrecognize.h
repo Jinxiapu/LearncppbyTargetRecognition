@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "imageprocess.h"
-
+using namespace std;
 
 namespace objr {
 	using namespace std;

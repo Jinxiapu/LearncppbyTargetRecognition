@@ -1,7 +1,8 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-
+#include <math.h>
+#include <stdlib.h>
 #include "objectrecognize.h"
 #include "bmp.h"
 
@@ -10,53 +11,57 @@ using namespace std;
 char* ObjectKindName[6] = { "Useless", "UnKnownKind", "Screw", "Nut", "HexKey", "Coin" };
 
 namespace objr {
-	void getfeatures(double *features, im::Object& o, const LONG Width, const LONG Height);
+	struct Features
+	{
+		double DutyCycle;
+		double Hu1;
+		double Hu2;
+		double AspectRatio;
+		bool Hollow;
+	};
+	void getfeatures(Features &f, im::Object& o, const LONG Width, const LONG Height);
 }
 
 int objr::objr(vector<im::Object>& v, const BYTE * origin, const LONG Width, const LONG Height)
 {
-	double NutArea = 0;
 	for (size_t i = 0; i < v.size(); i++) {
-		v[i].kind = UnknownKind;
-		v[i].is_valid = true;
-
-		double features[4];
-		bool RecOver = false;
-		getfeatures(features, v[i], Width, Height);
-		if (features[3] == 0 && 0.48<features[2] && 0.63>features[2]) {
-			v[i].kind = Nut;
-			RecOver = true;
-			NutArea = features[1];
-			v[i].is_valid = true;
-		}
-			
-		if (!RecOver &&  features[1] >NutArea &&
-			0.75 < features[2] && features[2] < 0.83 &&
-			(features[0] - 1) < 0.02 && (features[0] - 1) > -0.02) {
-			v[i].kind = Coin;
-			RecOver = true;
-		}
-
-		// 识别丝杆 特征有占空比， 重心不在图像内部，长宽比与占空比存在一定线性关系
-		if (!RecOver &&  features[2] >0.24) {
-			v[i].kind = Screw;
-			RecOver = true;
-		}
-		// 最后识别是丝杆还是杂物
-		if(!RecOver)
-			v[i].kind = HexKey;
+		Features f;
+		getfeatures(f, v[i],Width, Height);
 
 		cout.flags(ios::left);
 		cout << v[i].lable << "\t";
-		for (size_t j = 0; j < 4; j++)
-		{
-			cout << setw(10) << features[j] << "\t";
-		}
-
+		cout << setw(10) << f.DutyCycle << "\t";
+		cout << setw(10) << f.Hu1 << "\t";
+		cout << setw(10) << f.Hu2 << "\t";
+		cout << setw(10) << f.AspectRatio << "\t";
+		cout << setw(10) << f.Hollow << "\t";
 		cout << endl;
 
+		/* 螺母 */
+		if (!v[i].is_valid && !f.Hollow && 0.48 < f.DutyCycle && f.DutyCycle < 0.63) {
+			v[i].kind = Nut;
+			v[i].is_valid = true;
+		}
+		/* 硬币 */
+		if (!v[i].is_valid && 0.75 < f.DutyCycle && f.DutyCycle < 0.84 && f.AspectRatio > 0.96 ) {
+			v[i].kind = Coin;
+			v[i].is_valid = true;
+		}
+		/* 丝杆 */
+		if (!v[i].is_valid && 0.25 > f.DutyCycle && abs(f.Hu1 - 1.6) < 0.2) {
+			v[i].kind = HexKey;
+			v[i].is_valid = true;
+		}
+		/* 螺丝 */
+		if (!v[i].is_valid  &&
+			(abs(f.Hu1 - 0.35) < 0.06 || (abs(f.Hu1 - 0.47) < 0.06))) {
+			v[i].kind = Screw;
+			v[i].is_valid = true;
+		}
+
+
 		//if (v[i].is_valid) {
-		if (true){
+		if(true){
 			char filename[50];
 			sprintf_s(filename, "./test/%d_%s.bmp", v[i].lable, ObjectKindName[v[i].kind]);
 			MonochromeBmpHandler imghandle = MonochromeBmpHandler();
@@ -66,33 +71,38 @@ int objr::objr(vector<im::Object>& v, const BYTE * origin, const LONG Width, con
 	return 0;
 }
 
-void objr::getfeatures(double *features, im::Object& o, const LONG Width, const LONG Height)
+void objr::getfeatures(Features &f, im::Object& o, const LONG Width, const LONG Height)
 {
-	double oarea = o.obuff.Height * o.obuff.Width;
-	if (o.obuff.Width < o.obuff.Height)
-		features[0] = (double)o.obuff.Width / (double)o.obuff.Height;
-	else
-		features[0] = (double)o.obuff.Height / (double)o.obuff.Width;
-	
-	
-	double objectpixels = 0;
-	for (int r =0; r < o.obuff.Height; r++)
+	double M[3][3] = { 0.0 };
+	for (int r = 0; r < o.obuff.Width; r++)
 	{
-		for(int c = 0; c < o.obuff.Width; c++)
+		for (int c = 0; c < o.obuff.Height; c++)
 		{
-			if (*o.obuff.pixel(c, r)) {
-				objectpixels += 1;
+			if (*o.obuff.pixel(r, c)) {
+				M[0][0] += 1;
+				M[1][0] += r;
+				M[0][1] += c;
+				M[1][1] += r * c;
+				M[0][2] += c * c;
+				M[2][0] += r * r;
 			}
 		}
 	}
+	double w = o.obuff.Width;
+	double h = o.obuff.Height;
 
-	features[1] = objectpixels / (Width*Height);
-	features[2] = objectpixels / oarea; // Object占空比
+	f.AspectRatio = (w < h) ? (w / h) : (h / w);
+	f.DutyCycle = M[0][0] / o.obuff.Height / o.obuff.Width;
+	f.Hollow = *o.obuff.pixel(o.obuff.Width / 2, o.obuff.Height / 2);
 
-	features[3] = 0; // Object中心矩阵非0像素
-	for (int rp = -1; rp < 2; rp++) {
-		for (int cp = -1; cp < 2; cp++) {
-			features[3] += (*o.obuff.pixel(o.obuff.Width / 2 + cp, o.obuff.Height / 2 + rp)) ? 1 : 0;
-		}
-	}
+	double ax = M[1][0] / M[0][0];
+	double ay = M[0][1] / M[0][0];
+	double u11 = M[1][1] - ay * M[1][0];
+	double u20 = M[2][0] - ax * M[1][0];
+	double u02 = M[0][2] - ay * M[0][1];
+	u11 = u11 / M[0][0] / M[0][0];
+	u20 = u20 / M[0][0] / M[0][0];
+	u02 = u02 / M[0][0] / M[0][0];
+	f.Hu1 = abs(u20 + u02);
+	f.Hu2 = abs((u20 - u02)*(u20 - u02) + 4 * u11 * u11);
 }

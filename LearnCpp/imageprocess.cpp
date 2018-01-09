@@ -1,6 +1,5 @@
 #include "imageprocess.h"
 #include "connect.h"
-#include "objectrecognize.h"
 #include "bmp.h"
 
 #include <vector>
@@ -30,40 +29,6 @@ namespace im {
 
 		GenCC(buff, lable_buff, Width, Height, max_lable, v);
 
-		objr::objr(v, imgbuff, Width, Height);
-		for (size_t n = 0; n < v.size(); n++) {
-			for (LONG y = v[n].rec.min_y; y < v[n].rec.max_y; y++) {
-				for (LONG x = v[n].rec.min_x; x < v[n].rec.max_x; x++) {
-					if (*v[n].obuff.pixel(x - v[n].rec.min_x, y - v[n].rec.min_y)) {
-						switch (v[n].kind)
-						{
-						case Nut:
-							imgbuff[(y*Width + x) * 3] = 255;
-							imgbuff[(y*Width + x) * 3+1] = 0;
-							imgbuff[(y*Width + x) * 3+2] = 0;
-							break;
-						case Screw:
-							imgbuff[(y*Width + x) * 3+1] = 255;
-							imgbuff[(y*Width + x) * 3 + 2] = 0;
-							imgbuff[(y*Width + x) * 3] = 0;
-							break;
-						case HexKey:
-							imgbuff[(y*Width + x) * 3+2] = 255;
-							imgbuff[(y*Width + x) * 3 + 1] = 0;
-							imgbuff[(y*Width + x) * 3] = 0;
-							break;
-						case Coin:
-							imgbuff[(y*Width + x) * 3 + 1] = 255;
-							imgbuff[(y*Width + x) * 3] = 255;
-							imgbuff[(y*Width + x) * 3 + 2] = 0;
-							break;
-						default:
-							break;
-						}
-					}
-				}
-			}
-		}
 		delete[] lable_buff;
 		delete[] buff;
 		return 0;

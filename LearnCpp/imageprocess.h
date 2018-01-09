@@ -17,8 +17,6 @@ typedef enum ObjectKind
 
 namespace im {
 	using namespace std;
-	
-
 	class Rectangle
 	{
 	public:
@@ -106,7 +104,7 @@ namespace im {
 	{
 	public:
 		Object(int * const lbuff, const Rectangle r, const int lable, const LONG w, const LONG h) :
-			kind(UnknownKind), lbuff(lbuff), rec(r), lable(lable), w(w), h(h),
+			kind(UnknownKind), lbuff(lbuff), rec(r), lable(lable), w(w), h(h), is_valid(0),
 			obuff(r.max_x - r.min_x, r.max_y - r.min_y) {};
 
 		Object& operator= (const Object &o)

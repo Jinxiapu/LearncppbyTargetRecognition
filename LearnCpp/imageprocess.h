@@ -1,7 +1,10 @@
-#pragma once
+#ifndef _IM_H
+#define _IM_H
+
 #include <Windows.h>
 #include <iostream>
 #include <vector>
+#include "connect.h"
 
 typedef enum ObjectKind
 {
@@ -12,8 +15,6 @@ typedef enum ObjectKind
 	HexKey, //ÄÚÁù½Ç°âÊÖ
 	Coin //Ó²±Ò
 } ObjectKind;
-
-
 
 namespace im {
 	using namespace std;
@@ -26,12 +27,12 @@ namespace im {
 		{
 			LONG x = max_x - min_x;
 			LONG y = max_y - min_y;
-			if (x > w*0.9 || y > h * 0.9)
-				return false;
+			//if (x > w*0.9 || y > h * 0.9)
+				//return false;
 			if (x < w / 50 || y < w / 50)
 				return false;
-			if (x*y > w*h / 2)
-				return false;
+			//if (x*y > w*h / 2)
+				//return false;
 			return true;
 		}
 
@@ -57,14 +58,22 @@ namespace im {
 			buff = new BYTE[(w + 1)*(h + 1)];
 		};
 		ObjectBuff(const ObjectBuff &ob) : Width(ob.Width), Height(ob.Height) {
-			this->buff = new BYTE[(ob.Width + 1)*(ob.Height + 1)];
+			this->buff = new BYTE[ob.Width*ob.Height];
+			this->Width = ob.Width;
+			this->Height = ob.Height;
+			for (LONG i = 0; i < ob.Width*ob.Height; i++) {
+				this->buff[i] = ob.buff[i];
+			}
 		}
 
 		ObjectBuff& operator=(const ObjectBuff &ob)
 		{
 			this->Width = ob.Width;
 			this->Height = ob.Height;
-			this->buff = new BYTE[(ob.Width + 1)*(ob.Height + 1)];
+			this->buff = new BYTE[ob.Width*ob.Height];
+			for (LONG i = 0; i < ob.Width*ob.Height; i++) {
+				this->buff[i] = ob.buff[i];
+			}
 			return *this;
 		}
 
@@ -145,4 +154,8 @@ namespace im {
 	};
 
 	int im(BYTE *buff, LONG Width, LONG Height, vector<Object> &v);
+	int SingleCCRectangle(const BYTE *buff, int * lable_buff, LONG Width, LONG Height, int lable, Rectangle & rec);
+	int GenCC(const BYTE *, int *, LONG Width, LONG Height, int max_lable, vector<Object> &);
 }
+
+#endif // !IM_H

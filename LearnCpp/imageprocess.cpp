@@ -1,5 +1,4 @@
 #include "imageprocess.h"
-#include "connect.h"
 #include "bmp.h"
 
 #include <vector>
@@ -7,8 +6,6 @@ using namespace std;
 
 namespace im {
 	BYTE OTSUThresholdSegmentation(BYTE *buff, LONG N);
-	int SingleCCRectangle(const BYTE *buff,int * lable_buff, LONG Width, LONG Height, int lable, Rectangle & rec);
-	int GenCC(const BYTE *, int *, LONG Width, LONG Height, int max_lable, vector<Object> &);
 	int im(BYTE * imgbuff, LONG Width, LONG Height, vector<Object> &v)
 	{
 		if (!imgbuff)
@@ -37,19 +34,18 @@ namespace im {
 	int GenCC(const BYTE * buff, int * lable_buff, LONG Width, LONG Height, int max_lable, vector<Object> &v)
 	{
 		Rectangle rec = Rectangle();
-
-	for (int i = 0; i < max_lable; i++)
-	{
-		SingleCCRectangle(buff, lable_buff, Width, Height, i, rec);
-		if (rec.is_valid(Width, Height)) {
-			Object o = Object(lable_buff, rec, i, Width, Height);
-			v.push_back(o);
+		int v_size = v.size();
+		for (int i = 0; i < max_lable; i++)
+		{
+			SingleCCRectangle(buff, lable_buff, Width, Height, i, rec);
+			if (rec.is_valid(Width, Height)) {
+				Object o = Object(lable_buff, rec, i, Width, Height);
+				v.push_back(o);
+			}
 		}
-	}
-	
-	for (size_t j = 0; j < v.size(); j++)
-		v[j].make_bit_image();
-	return 0;
+		for (size_t j = v_size; j < v.size(); j++)
+			v[j].make_bit_image();
+		return 0;
 	}
 }
 
@@ -88,7 +84,7 @@ BYTE im::OTSUThresholdSegmentation(BYTE * buff, LONG N)
 	}
 
 	for (LONG i = 0; i < N; i++)
-		buff[i] = (buff[i] > best_t) ? 255 : 0;
+		buff[i] = (buff[i] > best_t) ? 0 : 255;
 
 	return best_t;
 }
@@ -100,7 +96,7 @@ int im::SingleCCRectangle(const BYTE *buff, int * lable_buff, LONG Width, LONG H
 	for (LONG r = 0; r < Height; r++) {
 		int * row = &lable_buff[Width*r];
 		for (LONG c = 0; c < Width; c++) {
-			if (!buff[Width*r + c] && row[c] == lable) {
+			if (buff[Width*r + c] && row[c] == lable) {
 				if (!first_pixel) {
 					rec.min_x = c;
 					rec.min_y = r;

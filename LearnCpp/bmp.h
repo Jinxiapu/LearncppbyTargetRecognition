@@ -1,4 +1,8 @@
-#pragma once
+#ifndef _BMP_H
+#define _BMP_H
+
+
+
 #include <fstream>
 #include <Windows.h>
 #include <iostream>
@@ -188,3 +192,5 @@ private:
 	BITMAPFILEHEADER bmfh;
 	BITMAPINFOHEADER bmih;
 };
+
+#endif // !_BMP_H

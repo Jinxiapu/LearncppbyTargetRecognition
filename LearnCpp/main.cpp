@@ -27,7 +27,7 @@ int main()
 	vector<im::Object> v;
 	im::im(buff, width, height, v);
 
-	objr::objr(v, buff, width, height);
+	objr::objr(v, buff, width, height, true);
 
 	for (size_t n = 0; n < v.size(); n++) {
 		for (LONG y = v[n].rec.min_y; y < v[n].rec.max_y; y++) {
@@ -57,7 +57,31 @@ int main()
 		}
 	}
 	imghandle.write(buff, "./test/after.bmp", width, height, SingleOrBGR);
-
+	
+	int result[4] = { 0 };
+	for (size_t nm = 0; nm < v.size(); nm++) {
+		switch (v[nm].kind)
+		{
+		case Nut:
+			result[0]++;
+			break;
+		case Screw:
+			result[1]++;
+			break;
+		case HexKey:
+			result[2]++;
+			break;
+		case Coin:
+			result[3]++;
+			break;
+		default:
+			break;
+		}
+	}
+	cout << "ÂÝÄ¸ : " << result[0] << endl;
+	cout << "ÂÝË¿ : " << result[1] << endl;
+	cout << "°âÊÖ : " << result[2] << endl;
+	cout << "Ó²±Ò : " << result[3] << endl;
 
 	getchar();
 	return 0;

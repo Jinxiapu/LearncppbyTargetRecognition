@@ -116,6 +116,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="connect.cpp" />
     <ClCompile Include="imageprocess.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="objectrecognize.cpp" />
@@ -124,7 +125,6 @@
     <ClInclude Include="bmp.h" />
     <ClInclude Include="connect.h" />
     <ClInclude Include="imageprocess.h" />
-    <ClInclude Include="morphology.h" />
     <ClInclude Include="objectrecognize.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
